@@ -80,19 +80,11 @@ def main():
         page_num_input.send_keys(str(idx))
         page_num_input.send_keys(Keys.ENTER)
 
-        # if idx == 1:
-        #     # 页面向下滚动50（第一页时跳过菜单栏）
-        #     js = r'var q=document.documentElement.scrollTop=75'
-        #     driver.execute_script(js)
-        # # 页面向上滚动40（已隐藏工具选项栏）
-        # js = r'var q=document.documentElement.scrollTop=0'
-        # driver.execute_script(js)
-
         # 隐藏工具选项栏
         js = 'document.getElementsByClassName(\'readshop\')[0].style.display="none";'
         driver.execute_script(js)
 
-        # 等待页面加载完成（待完善）
+        # 等待页面加载完成
         print('Waiting page [' + str(idx) + '] loading ...')
         for second in range(1, 300):
             load_percent = driver.find_element_by_id('pagepb_' + str(idx)).text
