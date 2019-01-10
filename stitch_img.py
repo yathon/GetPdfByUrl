@@ -60,12 +60,11 @@ def rotate_img_to_proper(image):
 
 def main():
     output_file_name = 'out.pdf'
-    save_file_name = 'ex.pdf'
     # doc = SimpleDocTemplate(save_file_name, pagesize=A1,
     #                     rightMargin=72, leftMargin=72,
     #                     topMargin=72, bottomMargin=18)
-    imgDoc = canvas.Canvas(output_file_name)  # pagesize=letter
-    imgDoc.setPageSize(A4)
+    img_doc = canvas.Canvas(output_file_name)  # pagesize=letter
+    img_doc.setPageSize(A4)
     document_width, document_height = A4
     mypath = input('Input the image folder please:')
     filenames = []
@@ -88,12 +87,12 @@ def main():
             # Determins the demensions of the image in the overview
             print_width = document_width
             print_height = document_width * image_aspect
-            imgDoc.drawImage(ImageReader(image_file), document_width - print_width,
-                             document_height - print_height, width=print_width,
-                             height=print_height, preserveAspectRatio=True)
+            img_doc.drawImage(ImageReader(image_file), document_width - print_width,
+                              document_height - print_height, width=print_width,
+                              height=print_height, preserveAspectRatio=True)
             # inform the reportlab we want a new page
-            imgDoc.showPage()
-            imgDoc.save()
+            img_doc.showPage()
+            img_doc.save()
         except Exception as e:
             print('error:', e, image)
     print('Done')
