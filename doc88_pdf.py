@@ -11,24 +11,21 @@ MAX_PAGE = 0  # 需要下载的页数
 ONE_PAGE_WAIT = 300  # 每页最大等待下载时间，单位秒
 
 
-def __get_file_name(driver):
+def __get_doc_title(driver):
     """
-        __get_file_name
+        __get_doc_title
     :param driver:
     :return:
     """
-    # 获取文档标题并转义非法字符后作为文件名
-    forbid_char = ' `~!@#$%^&*()+}{|":?><[]\\;\'/.,·～！@#¥%……&*（）——+-=「」|【】、；：/。，？》《'
-    fname = driver.find_element_by_class_name('doctopic')
-    fname = fname.find_element_by_xpath('h1').text
-    # print('文档标题[' + fname + ']')
+    # 为了兼容windows系统，获取文档标题后转义非法字符
+    forbid_char = r'/\:*"<>|?'
+    title = driver.find_element_by_class_name('doctopic')
+    title = title.find_element_by_xpath('h1').text
+    # print('文档标题：' + title)
     for fchar in forbid_char:
-        fname = fname.replace(fchar, '_')
+        title = title.replace(fchar, '_')
 
-    # fpath = os.path.join(fpath, fname)
-    # if not os.path.exists(fpath):
-    #     os.mkdir(fpath)
-    return fname
+    return title
 
 
 def __make_page_simple(driver):
@@ -91,7 +88,7 @@ def __get_png_list(url, tmp_path):
     driver.get(url)
 
     # 获取文档标题
-    title = __get_file_name(driver)
+    title = __get_doc_title(driver)
     print('文档标题：' + title)
 
     # 获取最大页数
