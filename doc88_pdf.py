@@ -2,7 +2,7 @@
 
 import os
 import time
-from drivers.driver import get_chrome_driver
+from .drivers.driver import get_chrome_driver
 
 from reportlab.pdfgen import canvas
 from PIL import Image
