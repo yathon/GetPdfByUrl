@@ -7,7 +7,7 @@ from .drivers.driver import get_chrome_driver
 from reportlab.pdfgen import canvas
 from PIL import Image
 
-MAX_PAGE = 0  # 需要下载的页数
+MAX_PAGE = -1  # 需要下载的页数，-1为下载全部(自动获取最大页数)
 ONE_PAGE_WAIT = 300  # 每页最大等待下载时间，单位秒
 
 
@@ -93,7 +93,7 @@ def __get_png_list(url, tmp_path):
 
     # 获取最大页数
     max_page = int(driver.find_element_by_class_name('text').text[2:])
-    if MAX_PAGE and (max_page > MAX_PAGE):
+    if max_page > MAX_PAGE >= 0:
         max_page = MAX_PAGE
     print('文档页数：' + str(max_page))
 
@@ -188,12 +188,9 @@ def __rm_files(file_list):
         os.remove(file)
 
 
-def doc88_pdf():
-    url = r'http://www.doc88.com/p-9005077529870.html'
-    # url = r'http://www.doc88.com/p-9119144870919.html'
-
-    fpath = r'/Users/admin/Downloads/doc88/'
+def doc88_pdf(url, fpath, fname=None):
     if not os.path.exists(fpath):
+        print('创建新目录：' + fpath)
         os.mkdir(fpath)
 
     print('开始解析地址：' + url)
@@ -203,7 +200,10 @@ def doc88_pdf():
     title, png_list = __get_png_list(url, fpath)
     if title and png_list:
         # 生成pdf文件
-        __make_pdf(os.path.join(fpath, title + '.pdf'), png_list)
+        if fname:
+            __make_pdf(os.path.join(fpath, fname + '.pdf'), png_list)
+        else:
+            __make_pdf(os.path.join(fpath, title + '.pdf'), png_list)
 
     # 清理缓存文件
     __rm_files(png_list)
@@ -211,8 +211,16 @@ def doc88_pdf():
     print('耗时：' + str(int((time.time() - time_begin) * 1000)) + ' 毫秒')
 
 
+def main():
+    url = r'http://www.doc88.com/p-9005077529870.html'
+    # url = r'http://www.doc88.com/p-9119144870919.html'
+    fpath = r'/Users/admin/Downloads/doc88/'
+
+    doc88_pdf(url, fpath)
+
+
 if __name__ == '__main__':
     try:
-        doc88_pdf()
+        main()
     except Exception as ex:
         print(ex)
