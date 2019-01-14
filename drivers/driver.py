@@ -13,7 +13,7 @@ def get_chrome_driver(dpath=None):
     chrome_options = webdriver.chrome.options.Options()
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
-    chrome_options.add_argument('--window-size=2000,2700')
+    # chrome_options.add_argument('--window-size=2000,2700')
     if dpath:
         prefs = {'download.default_directory': dpath}
         chrome_options.add_experimental_option('prefs', prefs)

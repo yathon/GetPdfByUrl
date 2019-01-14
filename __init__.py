@@ -1,4 +1,4 @@
 
-__all__ = ['drivers', 'doc88_pdf']
+__all__ = ['config', 'drivers', 'util', 'doc88_pdf']
 
-from . import drivers, doc88_pdf
+from . import config, drivers, util, doc88_pdf

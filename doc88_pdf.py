@@ -3,14 +3,14 @@
 import os
 import time
 from .drivers.driver import get_chrome_driver
+from . import config
+from .util import time_cost
 
 from reportlab.pdfgen import canvas
 from PIL import Image
 
-MAX_PAGE = -1  # 需要下载的页数，-1为下载全部(自动获取最大页数)
-ONE_PAGE_WAIT = 300  # 每页最大等待下载时间，单位秒
 
-
+@time_cost
 def __get_doc_title(driver):
     """
         __get_doc_title
@@ -18,16 +18,18 @@ def __get_doc_title(driver):
     :return:
     """
     # 为了兼容windows系统，获取文档标题后转义非法字符
-    forbid_char = r'/\:*"<>|?'
     title = driver.find_element_by_class_name('doctopic')
     title = title.find_element_by_xpath('h1').text
     # print('文档标题：' + title)
-    for fchar in forbid_char:
-        title = title.replace(fchar, '_')
+    if config.ESC_TITLE:
+        forbid_char = r'/\:*"<>|?'
+        for fchar in forbid_char:
+            title = title.replace(fchar, '_')
 
     return title
 
 
+@time_cost
 def __make_page_simple(driver):
     """
         __make_page_simple
@@ -72,6 +74,7 @@ def __make_page_simple(driver):
     driver.set_window_size(page_size.size['width'] + 20, page_size.size['height'])
 
 
+@time_cost
 def __get_png_list(url, tmp_path):
     """
         __get_png_list
@@ -93,8 +96,8 @@ def __get_png_list(url, tmp_path):
 
     # 获取最大页数
     max_page = int(driver.find_element_by_class_name('text').text[2:])
-    if max_page > MAX_PAGE >= 0:
-        max_page = MAX_PAGE
+    if max_page > config.MAX_PAGE >= 0:
+        max_page = config.MAX_PAGE
     print('文档页数：' + str(max_page))
 
     # 隐藏多余元素并将页面放大
@@ -120,19 +123,19 @@ def __get_png_list(url, tmp_path):
 
         # 等待页面加载完成
         print('正在下载第 ' + str(idx) + ' 页：', end=' ')
-        for second in range(1, ONE_PAGE_WAIT):
+        for second in range(1, config.ONE_PAGE_WAIT):
             load_percent = driver.find_element_by_id('pagepb_' + str(idx)).text
             if load_percent:
                 time.sleep(1)
                 print(load_percent, end=' ')
             else:
+                # print('第 ' + str(idx) + ' 页下载成功')
                 break
         else:
-            print('第 ' + str(idx) + ' 页下载失败，请重试')
-            # print('Close driver')
+            print('第 ' + str(idx) + ' 页下载失败')
             driver.quit()
-            return None, None
-        # print('\nWaiting page [' + str(idx) + '] loaded')
+            __rm_files(png_list)
+            raise Exception('第 ' + str(idx) + ' 页下载失败，请重试')
 
         # print('Write to file')
         fname_write = os.path.join(tmp_path, ('page_' + str(idx) + '.png'))
@@ -153,12 +156,12 @@ def __get_png_list(url, tmp_path):
         # print('Write to file OK')
 
     # 退出页面
-    # print('Close driver')
     driver.quit()
 
     return title, png_list
 
 
+@time_cost
 def __make_pdf(fname, png_list):
     """
         __make_pdf
@@ -177,6 +180,7 @@ def __make_pdf(fname, png_list):
     pdf.save()
 
 
+@time_cost
 def __rm_files(file_list):
     """
         __rm_files
@@ -188,13 +192,13 @@ def __rm_files(file_list):
         os.remove(file)
 
 
+@time_cost
 def doc88_pdf(url, fpath, fname=None):
+    print('开始解析地址：' + url)
+
     if not os.path.exists(fpath):
         print('创建新目录：' + fpath)
         os.mkdir(fpath)
-
-    print('开始解析地址：' + url)
-    time_begin = time.time()
 
     # 获取文档的所有截图
     title, png_list = __get_png_list(url, fpath)
@@ -207,20 +211,3 @@ def doc88_pdf(url, fpath, fname=None):
 
     # 清理缓存文件
     __rm_files(png_list)
-
-    print('耗时：' + str(int((time.time() - time_begin) * 1000)) + ' 毫秒')
-
-
-def main():
-    url = r'http://www.doc88.com/p-9005077529870.html'
-    # url = r'http://www.doc88.com/p-9119144870919.html'
-    fpath = r'/Users/admin/Downloads/doc88/'
-
-    doc88_pdf(url, fpath)
-
-
-if __name__ == '__main__':
-    try:
-        main()
-    except Exception as ex:
-        print(ex)
