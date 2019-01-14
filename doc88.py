@@ -2,34 +2,34 @@
 
 import os
 import time
-from .drivers.driver import get_chrome_driver
-from . import config
-from .util import time_cost
+from drivers.driver import get_chrome_driver
+import config
+from util import time_cost
 
 from reportlab.pdfgen import canvas
 from PIL import Image
 
 
-@time_cost
+@time_cost(config.TIME_COST_TYPE)
 def __get_doc_title(driver):
     """
         __get_doc_title
     :param driver:
     :return:
     """
-    # 为了兼容windows系统，获取文档标题后转义非法字符
     title = driver.find_element_by_class_name('doctopic')
     title = title.find_element_by_xpath('h1').text
     # print('文档标题：' + title)
+
+    # 为了兼容windows系统，获取文档标题后转义非法字符
     if config.ESC_TITLE:
-        forbid_char = r'/\:*"<>|?'
-        for fchar in forbid_char:
+        for fchar in config.FORBID_CHAR:
             title = title.replace(fchar, '_')
 
     return title
 
 
-@time_cost
+@time_cost(config.TIME_COST_TYPE)
 def __make_page_simple(driver):
     """
         __make_page_simple
@@ -71,10 +71,10 @@ def __make_page_simple(driver):
     # print('设置窗口合适大小')
     page_size = driver.find_element_by_class_name('outer_page')
     # print(page_size.size)
-    driver.set_window_size(page_size.size['width'] + 20, page_size.size['height'])
+    driver.set_window_size(page_size.size['width'] + 20, page_size.size['height'] + 10)
 
 
-@time_cost
+@time_cost(config.TIME_COST_TYPE)
 def __get_png_list(url, tmp_path):
     """
         __get_png_list
@@ -129,7 +129,6 @@ def __get_png_list(url, tmp_path):
                 time.sleep(1)
                 print(load_percent, end=' ')
             else:
-                # print('第 ' + str(idx) + ' 页下载成功')
                 break
         else:
             print('第 ' + str(idx) + ' 页下载失败')
@@ -145,15 +144,18 @@ def __get_png_list(url, tmp_path):
         # png_body = driver.find_element_by_id('pagepb_' + str(idx))
         # png_body.screenshot(fname_write)
         # 2.窗口截图
-        with open(fname_write, 'wb') as f_png:
-            write_size = f_png.write(driver.get_screenshot_as_png())
-            print('\n第 ' + str(idx) + ' 页大小为：' + str(write_size) + ' 字节')
-            png_list.append(fname_write)
+        driver.get_screenshot_as_file(fname_write)
+        # with open(fname_write, 'wb') as f_png:
+        #     png_binary_data = driver.get_screenshot_as_png()
+        #     # print(png_binary_data)
+        #     write_size = f_png.write(png_binary_data)
+        #     print('100% 大小为：' + str(write_size) + ' 字节')
         # 3.保存canvas
         # canvas = driver.find_element_by_id('outer_page_' + str(idx))
         # canvas = canvas.find_element_by_xpath('canvas')
         # canvas.screenshot(fname_write)
-        # print('Write to file OK')
+        png_list.append(fname_write)
+        print('100%')
 
     # 退出页面
     driver.quit()
@@ -161,7 +163,7 @@ def __get_png_list(url, tmp_path):
     return title, png_list
 
 
-@time_cost
+@time_cost(config.TIME_COST_TYPE)
 def __make_pdf(fname, png_list):
     """
         __make_pdf
@@ -172,7 +174,7 @@ def __make_pdf(fname, png_list):
     print('文件路径为：' + fname)
     img = Image.open(png_list[0])
     # print(img.size)
-    pdf = canvas.Canvas(fname, img.size)  # 第一张图片的尺寸新建pdf
+    pdf = canvas.Canvas(filename=fname, pagesize=img.size)  # 第一张图片的尺寸新建pdf
 
     for png in png_list:
         pdf.drawImage(png, 0, 0)
@@ -180,7 +182,7 @@ def __make_pdf(fname, png_list):
     pdf.save()
 
 
-@time_cost
+@time_cost(config.TIME_COST_TYPE)
 def __rm_files(file_list):
     """
         __rm_files
@@ -192,7 +194,7 @@ def __rm_files(file_list):
         os.remove(file)
 
 
-@time_cost
+@time_cost(config.TIME_COST_TYPE)
 def doc88_pdf(url, fpath, fname=None):
     print('开始解析地址：' + url)
 

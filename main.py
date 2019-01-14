@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
 
-from .config import RETRY
-from .doc88_pdf import doc88_pdf as get_pdf
+from doc88 import doc88_pdf as get_pdf, config
 
 
 def main():
@@ -9,7 +8,7 @@ def main():
     # url = r'http://www.doc88.com/p-9119144870919.html'
     fpath = r'/Users/admin/Downloads/doc88/'
 
-    for cnt in range(1, RETRY + 1):
+    for cnt in range(1, config.RETRY_CNT + 1):
         try:
             get_pdf(url, fpath)
             break

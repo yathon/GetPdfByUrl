@@ -16,10 +16,12 @@ def time_cost(time_type='msec'):
         'sec': 1.00,
         'min': 0.01666667,
     }
-    if time_type in tm:
-        coefficient = tm[time_type]
-    else:
-        coefficient = tm['msec']
+    tm_name = {
+        'usec': '微秒',
+        'msec': '毫秒',
+        'sec': '秒',
+        'min': '分钟',
+    }
 
     def __derorator(func):
         @functools.wraps(func)
@@ -28,7 +30,7 @@ def time_cost(time_type='msec'):
                 begin = time.time()
                 rst = func(*args, **kwargs)
                 end = time.time()
-                print('函数[%s]耗时[%s]' % (func.__name__, str((end - begin) * coefficient)))
+                print('函数[%s]耗时[%s]%s' % (func.__name__, str((end - begin) * tm[time_type]), tm_name[time_type]))
             else:
                 rst = func(*args, **kwargs)
 
