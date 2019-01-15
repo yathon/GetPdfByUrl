@@ -3,14 +3,14 @@
 import os
 import time
 from drivers.driver import get_chrome_driver
-import config
+from config import bconf
 from util import time_cost
 
 from reportlab.pdfgen import canvas
 from PIL import Image
 
 
-@time_cost(config.TIME_COST_TYPE)
+@time_cost(bconf['time_cost_type'])
 def __get_doc_title(driver):
     """
         __get_doc_title
@@ -22,14 +22,14 @@ def __get_doc_title(driver):
     # print('文档标题：' + title)
 
     # 为了兼容windows系统，获取文档标题后转义非法字符
-    if config.ESC_TITLE:
-        for fchar in config.FORBID_CHAR:
+    if bconf['esc_title']:
+        for fchar in bconf['forbid_char']:
             title = title.replace(fchar, '_')
 
     return title
 
 
-@time_cost(config.TIME_COST_TYPE)
+@time_cost(bconf['time_cost_type'])
 def __make_page_simple(driver):
     """
         __make_page_simple
@@ -74,7 +74,7 @@ def __make_page_simple(driver):
     driver.set_window_size(page_size.size['width'] + 20, page_size.size['height'] + 10)
 
 
-@time_cost(config.TIME_COST_TYPE)
+@time_cost(bconf['time_cost_type'])
 def __get_png_list(url, tmp_path):
     """
         __get_png_list
@@ -96,8 +96,8 @@ def __get_png_list(url, tmp_path):
 
     # 获取最大页数
     max_page = int(driver.find_element_by_class_name('text').text[2:])
-    if max_page > config.MAX_PAGE >= 0:
-        max_page = config.MAX_PAGE
+    if max_page > bconf['max_page'] >= 0:
+        max_page = bconf['max_page']
     print('文档页数：' + str(max_page))
 
     # 隐藏多余元素并将页面放大
@@ -122,16 +122,16 @@ def __get_png_list(url, tmp_path):
         # driver.execute_script(js)
 
         # 等待页面加载完成
-        print('正在下载第 ' + str(idx) + ' 页：', end=' ')
-        for second in range(1, config.ONE_PAGE_WAIT):
+        print('正在下载第 ' + str(idx) + ' 页：', end=' ', flush=True)
+        for second in range(1, bconf['one_page_wait'] + 1):
             load_percent = driver.find_element_by_id('pagepb_' + str(idx)).text
             if load_percent:
                 time.sleep(1)
-                print(load_percent, end=' ')
+                print(load_percent, end=' ', flush=True)
             else:
                 break
         else:
-            print('第 ' + str(idx) + ' 页下载失败')
+            print('下载失败')
             driver.quit()
             __rm_files(png_list)
             raise Exception('第 ' + str(idx) + ' 页下载失败，请重试')
@@ -163,7 +163,7 @@ def __get_png_list(url, tmp_path):
     return title, png_list
 
 
-@time_cost(config.TIME_COST_TYPE)
+@time_cost(bconf['time_cost_type'])
 def __make_pdf(fname, png_list):
     """
         __make_pdf
@@ -182,7 +182,7 @@ def __make_pdf(fname, png_list):
     pdf.save()
 
 
-@time_cost(config.TIME_COST_TYPE)
+@time_cost(bconf['time_cost_type'])
 def __rm_files(file_list):
     """
         __rm_files
@@ -194,7 +194,7 @@ def __rm_files(file_list):
         os.remove(file)
 
 
-@time_cost(config.TIME_COST_TYPE)
+@time_cost(bconf['time_cost_type'])
 def doc88_pdf(url, fpath, fname=None):
     print('开始解析地址：' + url)
 

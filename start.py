@@ -1,14 +1,15 @@
 # -*- coding:utf-8 -*-
 
-from doc88 import doc88_pdf as get_pdf, config
+from config import bconf
+from doc88 import doc88_pdf as get_pdf
 
 
-def main():
+def start():
     url = r'http://www.doc88.com/p-9005077529870.html'
     # url = r'http://www.doc88.com/p-9119144870919.html'
     fpath = r'/Users/admin/Downloads/doc88/'
 
-    for cnt in range(1, config.RETRY_CNT + 1):
+    for cnt in range(0, bconf['retry_cnt']):
         try:
             get_pdf(url, fpath)
             break
@@ -18,6 +19,6 @@ def main():
 
 if __name__ == '__main__':
     try:
-        main()
+        start()
     except Exception as ex:
         print(ex)
