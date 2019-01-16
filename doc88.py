@@ -6,6 +6,9 @@ from drivers.driver import get_chrome_driver
 from config import bconf
 from util import time_cost
 
+# from selenium.webdriver.common.keys import Keys
+# from selenium.webdriver.common.action_chains import ActionChains
+
 from reportlab.pdfgen import canvas
 from PIL import Image
 
@@ -37,8 +40,8 @@ def __make_page_simple(driver):
     :return:
     """
     # print('页面全屏')
-    fullscreen = driver.find_element_by_id('frscreen')
-    fullscreen.click()
+    # fullscreen = driver.find_element_by_id('frscreen')
+    # fullscreen.click()
 
     # print('放大页面')
     # bigger = driver.find_element_by_id('zoomInButton')
@@ -46,32 +49,35 @@ def __make_page_simple(driver):
     #     bigger.click()
     #     time.sleep(0.3)
 
-    # print('隐藏工具选项栏')
-    # js = 'document.getElementsByClassName(\'readshop\')[0].style.display="none";'
-    # driver.execute_script(js)
-
     # print('隐藏最上边条')
     # print('隐藏右上角提示')
     # print('隐藏右下角图标集')
-    # print('隐藏工具栏上所有项目（保留输入框）')
+    # # print('隐藏工具栏上所有项目（保留输入框）')
+    # js = '''
+    # document.getElementsByClassName(\'header\')[0].style.display="none";
+    # document.getElementsByClassName(\'skintips\')[0].style.display="none";
+    # document.getElementsByClassName(\'toplayer-shop\')[0].style.display="none";
+    # document.getElementsByClassName(\'shop1\')[2].style.display="none";
+    # document.getElementsByClassName(\'shop2\')[0].style.display="none";
+    # document.getElementById('prePageButton').style.display="none";
+    # document.getElementById('nextPageButton').style.display="none";
+    # document.getElementsByClassName(\'shop4\')[0].style.display="none";
+    # document.getElementsByClassName(\'shop4 share\')[0].style.display="none";
+    # '''
+    # driver.execute_script(js)
     js = '''
     document.getElementsByClassName(\'header\')[0].style.display="none";
     document.getElementsByClassName(\'skintips\')[0].style.display="none";
     document.getElementsByClassName(\'toplayer-shop\')[0].style.display="none";
-    document.getElementsByClassName(\'shop1\')[2].style.display="none";
-    document.getElementsByClassName(\'shop2\')[0].style.display="none";
-    document.getElementById('prePageButton').style.display="none";
-    document.getElementById('nextPageButton').style.display="none";
-    document.getElementsByClassName(\'shop4\')[0].style.display="none";
-    document.getElementsByClassName(\'shop4\')[0].style.display="none";
-    document.getElementsByClassName(\'shop4 share\')[0].style.display="none";
     '''
     driver.execute_script(js)
 
     # print('设置窗口合适大小')
-    page_size = driver.find_element_by_class_name('outer_page')
-    # print(page_size.size)
-    driver.set_window_size(page_size.size['width'] + 20, page_size.size['height'] + 10)
+    # readshop = driver.find_element_by_class_name('readshop')
+    # page = driver.find_element_by_class_name('outer_page')
+    # driver.set_window_size(page.size['width'] + 20, page.size['height'] + readshop.size['height'] + 20)
+    page = driver.find_element_by_class_name('page_view')
+    driver.set_window_size(page.size['width'] + 50, page.size['height'] + 50)
 
 
 @time_cost(bconf['time_cost_type'])
@@ -82,8 +88,6 @@ def __get_png_list(url, tmp_path):
     :param tmp_path:
     :return:
     """
-    png_list = []
-
     # print('Init Chrome')
     driver = get_chrome_driver()
 
@@ -92,46 +96,56 @@ def __get_png_list(url, tmp_path):
 
     # 获取文档标题
     title = __get_doc_title(driver)
-    print('文档标题：' + title)
+    print('文档标题：' + title, flush=True)
 
     # 获取最大页数
     max_page = int(driver.find_element_by_class_name('text').text[2:])
     if max_page > bconf['max_page'] >= 0:
         max_page = bconf['max_page']
-    print('文档页数：' + str(max_page))
+    print('文档页数：' + str(max_page), flush=True)
 
     # 隐藏多余元素并将页面放大
     __make_page_simple(driver)
 
+    # shop_size = driver.find_element_by_class_name('readshop').size
+    # page_size = driver.find_element_by_class_name('outer_page').size
+
     # 获取跳转页面输入框句柄
     page_num_input = driver.find_element_by_id('pageNumInput')
 
-    # print('Starting to snap page')
+    png_list = []
+
     for idx in range(1, max_page + 1):
         # 显示工具选项栏
-        # js = 'document.getElementsByClassName(\'readshop\')[0].style.display="block";'
-        # driver.execute_script(js)
+        js = 'document.getElementsByClassName(\'readshop\')[0].style.display="block";'
+        driver.execute_script(js)
 
         # 清空并输入需要跳转的页面后触发跳转
         page_num_input.clear()
         page_num_input.send_keys(str(idx))  # 输入页码
-        page_num_input.send_keys('\ue007')  # 输入回车
+        page_num_input.send_keys('\ue007')  # 回车键
 
         # 隐藏工具选项栏
-        # js = 'document.getElementsByClassName(\'readshop\')[0].style.display="none";'
-        # driver.execute_script(js)
+        js = 'document.getElementsByClassName(\'readshop\')[0].style.display="none";'
+        driver.execute_script(js)
+
+        # 页面向下滚动
+        # if idx > 2:
+        #     ActionChains(driver).send_keys(Keys.DOWN).perform()
+        #     ActionChains(driver).send_keys(Keys.DOWN).perform()
 
         # 等待页面加载完成
         print('正在下载第 ' + str(idx) + ' 页：', end=' ', flush=True)
         for second in range(1, bconf['one_page_wait'] + 1):
             load_percent = driver.find_element_by_id('pagepb_' + str(idx)).text
             if load_percent:
-                time.sleep(1)
                 print(load_percent, end=' ', flush=True)
+                time.sleep(1)
             else:
+                print(r'100%', end=' ', flush=True)
                 break
         else:
-            print('下载失败')
+            print('下载失败', flush=True)
             driver.quit()
             __rm_files(png_list)
             raise Exception('第 ' + str(idx) + ' 页下载失败，请重试')
@@ -139,12 +153,11 @@ def __get_png_list(url, tmp_path):
         # print('Write to file')
         fname_write = os.path.join(tmp_path, ('page_' + str(idx) + '.png'))
 
-        # 1.直接元素截图
-        # 获取页面截图并写入文件
-        # png_body = driver.find_element_by_id('pagepb_' + str(idx))
-        # png_body.screenshot(fname_write)
+        # 1.直接元素截图并写入文件
+        png_body = driver.find_element_by_id('pagepb_' + str(idx))
+        png_body.screenshot(fname_write)
         # 2.窗口截图
-        driver.get_screenshot_as_file(fname_write)
+        # driver.get_screenshot_as_file(fname_write)
         # with open(fname_write, 'wb') as f_png:
         #     png_binary_data = driver.get_screenshot_as_png()
         #     # print(png_binary_data)
@@ -154,8 +167,27 @@ def __get_png_list(url, tmp_path):
         # canvas = driver.find_element_by_id('outer_page_' + str(idx))
         # canvas = canvas.find_element_by_xpath('canvas')
         # canvas.screenshot(fname_write)
+
+        # 截取主要页面内容
+        # img = Image.open(fname_write)
+        # x = (img.size[0] / (page_size['width'] + 20)) * 8
+        # if idx == 1:
+        #     y = 20
+        # elif idx == 2:
+        #     y = 10
+        # else:
+        #     y = 0
+        # cx = (img.size[0] / (page_size['width'] + 20)) * page_size['width']
+        # cy = (img.size[1] / (page_size['height'] + shop_size['height'])) * page_size['height']
+        # rangle = (x, y, cx, cy)
+        # frame4 = img.crop(rangle)
+        # frame4.save(fname_write)
+
+        print('缓存成功', flush=True)
         png_list.append(fname_write)
-        print('100%')
+
+    # page = driver.find_element_by_class_name('page_view')
+    # page.screenshot(r'/Users/admin/Downloads/doc88/page_view.png')
 
     # 退出页面
     driver.quit()
@@ -171,14 +203,19 @@ def __make_pdf(fname, png_list):
     :param png_list:
     :return:
     """
-    print('文件路径为：' + fname)
+    print('文件路径为：' + fname, flush=True)
     img = Image.open(png_list[0])
     # print(img.size)
     pdf = canvas.Canvas(filename=fname, pagesize=img.size)  # 第一张图片的尺寸新建pdf
 
-    for png in png_list:
+    cnt = len(png_list)
+    for png, idx in png_list, range(cnt):
         pdf.drawImage(png, 0, 0)
         pdf.showPage()
+        if int((idx / cnt) * 10) % 100 == 0:
+            print('%s%%' % str(int(idx / cnt)), end=' ', flush=True)
+
+    print(r'100%', flush=True)
     pdf.save()
 
 
@@ -189,17 +226,22 @@ def __rm_files(file_list):
     :param file_list:
     :return:
     """
-    print('清理缓存')
-    for file in file_list:
+    print('清理缓存', flush=True)
+    cnt = len(file_list)
+    for file, idx in file_list, range(cnt):
         os.remove(file)
+        if int((idx / cnt) * 10) % 100 == 0:
+            print('%s%%' % str(int(idx / cnt)), end=' ', flush=True)
+
+    print(r'100%', flush=True)
 
 
 @time_cost(bconf['time_cost_type'])
 def doc88_pdf(url, fpath, fname=None):
-    print('开始解析地址：' + url)
+    print('开始解析地址：' + url, flush=True)
 
     if not os.path.exists(fpath):
-        print('创建新目录：' + fpath)
+        print('创建新目录：' + fpath, flush=True)
         os.mkdir(fpath)
 
     # 获取文档的所有截图
@@ -213,3 +255,6 @@ def doc88_pdf(url, fpath, fname=None):
 
     # 清理缓存文件
     __rm_files(png_list)
+
+    print('文档下载成功', flush=True)
+
