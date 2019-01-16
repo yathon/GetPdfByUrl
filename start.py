@@ -15,7 +15,8 @@ def start():
             get_pdf(url, fpath)
             break
         except Exception as e:
-            print(e)
+            print('文档下载失败，文档已删除或网络错误', flush=True)
+            # print(e, flush=True)
 
 
 if __name__ == '__main__':
