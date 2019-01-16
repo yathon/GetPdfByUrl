@@ -6,9 +6,6 @@ from drivers.driver import get_chrome_driver
 from config import bconf
 from util import time_cost
 
-# from selenium.webdriver.common.keys import Keys
-# from selenium.webdriver.common.action_chains import ActionChains
-
 from reportlab.pdfgen import canvas
 from PIL import Image
 
@@ -22,7 +19,6 @@ def __get_doc_title(driver):
     """
     title = driver.find_element_by_class_name('doctopic')
     title = title.find_element_by_xpath('h1').text
-    # print('文档标题：' + title)
 
     # 为了兼容windows系统，获取文档标题后转义非法字符
     if bconf['esc_title']:
@@ -39,32 +35,9 @@ def __make_page_simple(driver):
     :param driver:
     :return:
     """
-    # print('页面全屏')
-    # fullscreen = driver.find_element_by_id('frscreen')
-    # fullscreen.click()
-
-    # print('放大页面')
-    # bigger = driver.find_element_by_id('zoomInButton')
-    # for cnt in range(1, 8):
-    #     bigger.click()
-    #     time.sleep(0.3)
-
     # print('隐藏最上边条')
     # print('隐藏右上角提示')
     # print('隐藏右下角图标集')
-    # # print('隐藏工具栏上所有项目（保留输入框）')
-    # js = '''
-    # document.getElementsByClassName(\'header\')[0].style.display="none";
-    # document.getElementsByClassName(\'skintips\')[0].style.display="none";
-    # document.getElementsByClassName(\'toplayer-shop\')[0].style.display="none";
-    # document.getElementsByClassName(\'shop1\')[2].style.display="none";
-    # document.getElementsByClassName(\'shop2\')[0].style.display="none";
-    # document.getElementById('prePageButton').style.display="none";
-    # document.getElementById('nextPageButton').style.display="none";
-    # document.getElementsByClassName(\'shop4\')[0].style.display="none";
-    # document.getElementsByClassName(\'shop4 share\')[0].style.display="none";
-    # '''
-    # driver.execute_script(js)
     js = '''
     document.getElementsByClassName(\'header\')[0].style.display="none";
     document.getElementsByClassName(\'skintips\')[0].style.display="none";
@@ -73,9 +46,6 @@ def __make_page_simple(driver):
     driver.execute_script(js)
 
     # print('设置窗口合适大小')
-    # readshop = driver.find_element_by_class_name('readshop')
-    # page = driver.find_element_by_class_name('outer_page')
-    # driver.set_window_size(page.size['width'] + 20, page.size['height'] + readshop.size['height'] + 20)
     page = driver.find_element_by_class_name('page_view')
     driver.set_window_size(page.size['width'] + 50, page.size['height'] + 50)
 
@@ -88,10 +58,7 @@ def __get_png_list(url, tmp_path):
     :param tmp_path:
     :return:
     """
-    # print('Init Chrome')
     driver = get_chrome_driver()
-
-    # print('Starting to get page')
     driver.get(url)
 
     # 获取文档标题
@@ -106,9 +73,6 @@ def __get_png_list(url, tmp_path):
 
     # 隐藏多余元素并将页面放大
     __make_page_simple(driver)
-
-    # shop_size = driver.find_element_by_class_name('readshop').size
-    # page_size = driver.find_element_by_class_name('outer_page').size
 
     # 获取跳转页面输入框句柄
     page_num_input = driver.find_element_by_id('pageNumInput')
@@ -129,11 +93,6 @@ def __get_png_list(url, tmp_path):
         js = 'document.getElementsByClassName(\'readshop\')[0].style.display="none";'
         driver.execute_script(js)
 
-        # 页面向下滚动
-        # if idx > 2:
-        #     ActionChains(driver).send_keys(Keys.DOWN).perform()
-        #     ActionChains(driver).send_keys(Keys.DOWN).perform()
-
         # 等待页面加载完成
         print('正在下载第 ' + str(idx) + ' 页：', end=' ', flush=True)
         for second in range(1, bconf['one_page_wait'] + 1):
@@ -150,48 +109,16 @@ def __get_png_list(url, tmp_path):
             __rm_files(png_list)
             raise Exception('第 ' + str(idx) + ' 页下载失败，请重试')
 
-        # print('Write to file')
         fname_write = os.path.join(tmp_path, ('page_' + str(idx) + '.png'))
 
-        # 1.直接元素截图并写入文件
+        # 直接元素截图并写入文件
         png_body = driver.find_element_by_id('pagepb_' + str(idx))
         png_body.screenshot(fname_write)
-        # 2.窗口截图
-        # driver.get_screenshot_as_file(fname_write)
-        # with open(fname_write, 'wb') as f_png:
-        #     png_binary_data = driver.get_screenshot_as_png()
-        #     # print(png_binary_data)
-        #     write_size = f_png.write(png_binary_data)
-        #     print('100% 大小为：' + str(write_size) + ' 字节')
-        # 3.保存canvas
-        # canvas = driver.find_element_by_id('outer_page_' + str(idx))
-        # canvas = canvas.find_element_by_xpath('canvas')
-        # canvas.screenshot(fname_write)
-
-        # 截取主要页面内容
-        # img = Image.open(fname_write)
-        # x = (img.size[0] / (page_size['width'] + 20)) * 8
-        # if idx == 1:
-        #     y = 20
-        # elif idx == 2:
-        #     y = 10
-        # else:
-        #     y = 0
-        # cx = (img.size[0] / (page_size['width'] + 20)) * page_size['width']
-        # cy = (img.size[1] / (page_size['height'] + shop_size['height'])) * page_size['height']
-        # rangle = (x, y, cx, cy)
-        # frame4 = img.crop(rangle)
-        # frame4.save(fname_write)
-
         print('缓存成功', flush=True)
+
         png_list.append(fname_write)
 
-    # page = driver.find_element_by_class_name('page_view')
-    # page.screenshot(r'/Users/admin/Downloads/doc88/page_view.png')
-
-    # 退出页面
     driver.quit()
-
     return title, png_list
 
 
@@ -205,7 +132,6 @@ def __make_pdf(fname, png_list):
     """
     print('文件路径为：' + fname, flush=True)
     img = Image.open(png_list[0])
-    # print(img.size)
     pdf = canvas.Canvas(filename=fname, pagesize=img.size)  # 第一张图片的尺寸新建pdf
 
     cnt = len(png_list)
@@ -244,10 +170,9 @@ def doc88_pdf(url, fpath, fname=None):
         print('创建新目录：' + fpath, flush=True)
         os.mkdir(fpath)
 
-    # 获取文档的所有截图
+    # 获取文档
     title, png_list = __get_png_list(url, fpath)
     if title and png_list:
-        # 生成pdf文件
         if fname:
             __make_pdf(os.path.join(fpath, fname + '.pdf'), png_list)
         else:
