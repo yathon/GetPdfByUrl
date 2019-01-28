@@ -77,11 +77,11 @@ def __get_png_list(url, tmp_path, show_percent=True):
     # 获取跳转页面输入框句柄
     page_jump = driver.find_element_by_id('pageNumInput')
 
-    target = driver.find_element_by_class_name('outer_page')  # 单个页面载体
-    size = target.size
-    size = {'x': size['width'], 'y': size['height']}
-    pdf_name = os.path.join(tmp_path, title + '.pdf')
-    pdf = canvas.Canvas(filename=pdf_name, pagesize=size)
+    # target = driver.find_element_by_class_name('outer_page')  # 单个页面载体
+    # size = target.size
+    # size = {'x': size['width'], 'y': size['height']}
+    # pdf_name = os.path.join(tmp_path, title + '.pdf')
+    # pdf = canvas.Canvas(filename=pdf_name, pagesize=size)
 
     png_list = []
     for idx in range(1, max_page + 1):
@@ -127,7 +127,6 @@ def __get_png_list(url, tmp_path, show_percent=True):
         # 截图写入文件
         if bconf['use_png']:
             target.screenshot(fname)
-            size = 'null'
         else:
             js = """
                 var canvas = document.getElementById(\'page_%s\');
@@ -140,13 +139,13 @@ def __get_png_list(url, tmp_path, show_percent=True):
             # pdf.drawImage(png, 0, 0)
             # pdf.showPage()
             with open(fname, 'wb') as f:
-                size = f.write(png)
+                f.write(png)
 
         # 添加文件列表记录
         png_list.append(fname)
-        print('完成 [%s]' % size, flush=True)
+        print('完成', flush=True)
 
-    pdf.save()
+    # pdf.save()
     driver.quit()
     return title, png_list
 
