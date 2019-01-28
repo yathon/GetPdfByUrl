@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 
+import traceback
 from config import bconf
 from doc88 import doc88_pdf as get_pdf
 
@@ -15,8 +16,9 @@ def start():
             get_pdf(url, fpath)
             break
         except Exception as e:
+            print(e, flush=True)
             print('文档下载失败，文档已删除或网络错误', flush=True)
-            # print(e, flush=True)
+            print(traceback.format_exc(), flush=True)
 
 
 if __name__ == '__main__':

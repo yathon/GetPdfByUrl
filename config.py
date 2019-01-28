@@ -7,6 +7,7 @@ bconf = {
     'esc_title': True,  # 标题作为文件名时是否转义非法字符（兼容windows系统必须开启）
     'forbid_char': r' /\:*"<>|?',
     'retry_cnt': 1,  # 重试次数
+    'use_png': False,
 }
 
 tm = {
