@@ -1,21 +1,20 @@
-# -*- coding: utf-8 -*-
+# -*- coding:utf-8 -*-
+__author__ = 'Yathon'
+__time__ = '2018/12/14 10:46'
 
 import os
 import time
 import base64
-from drivers.driver import get_chrome_driver
+from drivers import get_chrome_driver
 from config import bconf
-from util import time_cost
-
-from reportlab.pdfgen import canvas
-from PIL import Image
+from util import time_cost, make_pdf, rm_files
 
 
-def __get_doc_title(driver):
+def __get_doc_title(driver, win=True):
     title = driver.find_element_by_xpath('//*[@id="box1"]/div/h1').text
 
     # 为了兼容windows系统，获取文档标题后转义非法字符
-    if bconf['esc_title']:
+    if win:
         for fchar in bconf['forbid_char']:
             title = title.replace(fchar, '_')
 
@@ -51,18 +50,12 @@ def __make_page_simple(driver):
 
 
 @time_cost(bconf['time_cost_type'])
-def __get_png_list(url, tmp_path, show_percent=True):
-    """
-        __get_png_list
-    :param url:
-    :param tmp_path:
-    :return:
-    """
+def __get_png_list(url, tmp_path):
     driver = get_chrome_driver()
     driver.get(url)
 
     # 获取文档标题
-    title = __get_doc_title(driver)
+    title = __get_doc_title(driver, bconf['esc_title'])
     print('文档标题：' + title, flush=True)
 
     # 获取最大页数
@@ -118,7 +111,7 @@ def __get_png_list(url, tmp_path, show_percent=True):
             driver.quit()
 
             # 清理缓存文件
-            __rm_files(png_list)
+            rm_files(png_list)
             raise Exception('第 ' + str(idx) + ' 页扫描失败，请重试')
 
         # 跳转元素位置
@@ -150,59 +143,6 @@ def __get_png_list(url, tmp_path, show_percent=True):
     return title, png_list
 
 
-def __percent(idx, total):
-    percent = int((idx / total) * 10000) / 100
-    print('%s%%' % str(percent), end=' ', flush=True)
-    if percent >= 100:
-        print('', flush=True)
-
-
-@time_cost(bconf['time_cost_type'])
-def __make_pdf(fname, plist, show_percent=True):
-    """
-        __make_pdf
-    :param fname:
-    :param plist:
-    :return:
-    """
-    idx = 0
-    cnt = len(plist)
-    if cnt == 0:
-        return
-
-    print('文件路径为：' + fname, flush=True)
-    img = Image.open(plist[0])
-    pdf = canvas.Canvas(filename=fname, pagesize=img.size)  # 第一张图片的尺寸新建pdf
-
-    for png in plist:
-        pdf.drawImage(png, 0, 0)
-        pdf.showPage()
-        idx = idx + 1
-        if show_percent:
-            __percent(idx, cnt)
-    pdf.save()
-
-
-@time_cost(bconf['time_cost_type'])
-def __rm_files(flist, show_percent=True):
-    """
-        __rm_files
-    :param flist:
-    :return:
-    """
-    idx = 0
-    cnt = len(flist)
-    if cnt == 0:
-        return
-
-    print('清理缓存', flush=True)
-    for f in flist:
-        os.remove(f)
-        idx = idx + 1
-        if show_percent:
-            __percent(idx, cnt)
-
-
 @time_cost(bconf['time_cost_type'])
 def doc88_pdf(url, fpath, fname=None, show_percent=True):
     print('开始解析地址：' + url, flush=True)
@@ -212,15 +152,14 @@ def doc88_pdf(url, fpath, fname=None, show_percent=True):
         os.mkdir(fpath)
 
     # 获取文档
-    title, pngs = __get_png_list(url, fpath, show_percent)
+    title, pngs = __get_png_list(url, fpath)
     if title and pngs:
         if fname:
-            __make_pdf(os.path.join(fpath, fname + '.pdf'), pngs, show_percent)
+            make_pdf(os.path.join(fpath, fname + '.pdf'), pngs, show_percent)
         else:
-            __make_pdf(os.path.join(fpath, title + '.pdf'), pngs, show_percent)
+            make_pdf(os.path.join(fpath, title + '.pdf'), pngs, show_percent)
 
     # 清理缓存文件
-    __rm_files(pngs, show_percent)
+    rm_files(pngs, show_percent)
 
     print('文档下载成功', flush=True)
-

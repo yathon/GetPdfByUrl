@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+# -*- coding:utf-8 -*-
+__author__ = 'Yathon'
+__time__ = '2018/12/14 10:46'
 
 bconf = {
     'max_page': -1,  # 需要下载的页数，-1为下载全部(自动获取最大页数)

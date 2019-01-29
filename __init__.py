@@ -1,5 +1,3 @@
 # -*- coding:utf-8 -*-
-
-__all__ = ['config', 'drivers', 'util', 'doc88']
-
-from . import config, drivers, util, doc88
+__author__ = 'Yathon'
+__time__ = '2018/12/14 10:46'
